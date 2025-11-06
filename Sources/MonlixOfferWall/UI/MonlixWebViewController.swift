@@ -1,14 +1,7 @@
-//
-//  LoyalJamWebViewController.swift
-//  Pods
-//
-//  Created by Filip Vujovic on 30. 4. 2025..
-//
-
 import UIKit
 import WebKit
 
-class MonlixOfferWallWebViewController: UIViewController {
+class MonlixWebViewController: UIViewController {
     
     private var webView: WKWebView!
     
@@ -19,12 +12,12 @@ class MonlixOfferWallWebViewController: UIViewController {
         setupNavigationBar()
         registerNotifications()
         
-        guard LoyalJamOfferWall.isInitialized else {
+        guard MonlixOfferWall.isInitialized else {
             dismiss(animated: true)
             return
         }
         
-        let url = LoyalJamOfferWall.getUrlWithParameters()
+        let url = MonlixOfferWall.getUrlWithParameters()
         loadWebView(with: url)
     }
     
@@ -55,18 +48,13 @@ class MonlixOfferWallWebViewController: UIViewController {
     
     private func setupNavigationBar() {
         navigationController?.setNavigationBarHidden(true, animated: false)
-//        navigationItem.leftBarButtonItem = UIBarButtonItem(
-//            barButtonSystemItem: .close,
-//            target: self,
-//            action: #selector(closeButtonTapped)
-//        )
     }
     
     private func registerNotifications() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(closeWebView),
-            name: NSNotification.Name(LoyalJamConstants.CLOSE_ACTION),
+            name: NSNotification.Name(MonlixConstants.CLOSE_ACTION),
             object: nil
         )
     }
@@ -75,11 +63,6 @@ class MonlixOfferWallWebViewController: UIViewController {
         guard let url = URL(string: urlString) else { return }
         let request = URLRequest(url: url)
         webView.load(request)
-    }
-    
-    
-    @objc private func closeButtonTapped() {
-        dismiss(animated: true)
     }
     
     @objc private func closeWebView() {
@@ -93,28 +76,27 @@ class MonlixOfferWallWebViewController: UIViewController {
     }
 }
 
-extension LoyalJamWebViewController: WKNavigationDelegate {
-    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+extension MonlixWebViewController: WKNavigationDelegate {
+    private func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         guard let url = navigationAction.request.url?.absoluteString else {
             decisionHandler(.allow)
             return
         }
         
-        if url.contains(LoyalJamConstants.URL_CLOSE_PARAM) {
+        if url.contains(MonlixConstants.URL_CLOSE_PARAM) {
             decisionHandler(.cancel)
             dismiss(animated: true)
             return
         }
         
-        if url.hasPrefix(LoyalJamConstants.BASE_URL) {
+        if url.hasPrefix(MonlixConstants.BASE_URL) {
             decisionHandler(.allow)
             return
         }
         
-        // Handle external links
-        if let url = navigationAction.request.url,
-           UIApplication.shared.canOpenURL(url) {
-            UIApplication.shared.open(url)
+        if let openURL = navigationAction.request.url,
+           UIApplication.shared.canOpenURL(openURL) {
+            UIApplication.shared.open(openURL)
             decisionHandler(.cancel)
             return
         }
@@ -123,9 +105,8 @@ extension LoyalJamWebViewController: WKNavigationDelegate {
     }
 }
 
-extension LoyalJamWebViewController: WKUIDelegate {
-    // Handle alert, confirm and prompt dialogs
-    func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+extension MonlixWebViewController: WKUIDelegate {
+    private func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
         let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
             completionHandler()
@@ -133,7 +114,7 @@ extension LoyalJamWebViewController: WKUIDelegate {
         present(alertController, animated: true)
     }
     
-    func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
+    private func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
         let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in
             completionHandler(false)

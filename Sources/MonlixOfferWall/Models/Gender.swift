@@ -1,9 +1,3 @@
-//
-//  Gender.swift
-//  Pods
-//
-//  Created by Filip Vujovic on 30. 4. 2025..
-//
 import Foundation
 
 public enum Gender: String {
