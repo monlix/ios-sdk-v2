@@ -1,7 +1,7 @@
 import UIKit
 import WebKit
 
-class MonlixWebViewController: UIViewController {
+class MonlixWebViewController: UIViewController, WKNavigationDelegate {
     
     private var webView: WKWebView!
     
@@ -76,36 +76,25 @@ class MonlixWebViewController: UIViewController {
     }
 }
 
-extension MonlixWebViewController: WKNavigationDelegate {
-    private func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        guard let url = navigationAction.request.url?.absoluteString else {
-            decisionHandler(.allow)
-            return
-        }
-        
-        if url.contains(MonlixConstants.URL_CLOSE_PARAM) {
-            decisionHandler(.cancel)
-            dismiss(animated: true)
-            return
-        }
-        
-        if url.hasPrefix(MonlixConstants.BASE_URL) {
-            decisionHandler(.allow)
-            return
-        }
-        
-        if let openURL = navigationAction.request.url,
-           UIApplication.shared.canOpenURL(openURL) {
-            UIApplication.shared.open(openURL)
-            decisionHandler(.cancel)
-            return
-        }
-        
-        decisionHandler(.allow)
-    }
-}
-
 extension MonlixWebViewController: WKUIDelegate {
+    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+ 
+        guard let url = navigationAction.request.url else {
+            return nil
+        }
+        
+        let absolute = url.absoluteString
+        
+        if absolute.contains(MonlixConstants.URL_CLOSE_PARAM) {
+            dismiss(animated: true)
+            return nil
+        }
+        
+        UIApplication.shared.open(url)
+        
+        return nil
+    }
+    
     private func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
         let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
